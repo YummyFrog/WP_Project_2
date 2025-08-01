@@ -1,0 +1,30 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+#puzzlearea {
+  width: 400px;
+  height: 400px;
+  margin: 0 auto;
+  position: relative;
+  border: 2px solid black;
+}
+
+.puzzlepiece {
+  width: 96px;
+  height: 96px;
+  border: 2px solid black;
+  position: absolute;
+  font-size: 32pt;
+  color: white;
+  text-align: center;
+  line-height: 96px;
+  background-image: url("background1.jpg");
+  background-size: 400px 400px;
+}
+
+.validators {
+  text-align: right;
+  margin-top: 20px;
+}
