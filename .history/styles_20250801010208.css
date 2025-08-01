@@ -22,14 +22,6 @@ body {
   line-height: 96px;
   background-image: url("background1.jpg");
   background-size: 400px 400px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.movablepiece {
-  border-color: red !important;
-  color: #006600 !important;
-  text-decoration: underline;
 }
 
 .validators {

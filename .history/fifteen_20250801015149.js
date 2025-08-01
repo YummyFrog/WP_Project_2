@@ -13,30 +13,28 @@ window.onload = function () {
 function initializePuzzle() {
   const puzzleArea = document.getElementById("puzzlearea");
   
-  // Initialize game state (solved position: tiles 1-15 in positions 0-14, blank in position 15)
-  for (let i = 0; i < 15; i++) {
-    gameState[i] = i + 1; // Position 0 has tile 1, position 1 has tile 2, etc.
+  // Initialize game state (solved position)
+  for (let i = 0; i < 16; i++) {
+    gameState[i] = i;
   }
-  gameState[15] = 0; // Position 15 is blank (represented by 0)
-  blankPosition = 15;
   
-  // Create tile elements for tiles 1-15
-  for (let i = 1; i <= 15; i++) {
+  // Create tile elements for positions 0-14 (position 15 is blank)
+  for (let i = 0; i < 15; i++) {
     const tile = document.createElement("div");
     tile.className = "puzzlepiece";
-    tile.textContent = i;
-    tile.setAttribute("data-number", i);
+    tile.textContent = i + 1;
+    tile.setAttribute("data-number", i + 1);
     
-    // Set initial position (tile i goes to position i-1)
-    updateTilePosition(tile, i - 1);
+    // Set initial position
+    updateTilePosition(tile, i);
     
     // Add event listeners
-    tile.addEventListener("click", () => handleTileClick(i));
-    tile.addEventListener("mouseenter", () => handleTileHover(tile, i));
+    tile.addEventListener("click", () => handleTileClick(i + 1));
+    tile.addEventListener("mouseenter", () => handleTileHover(tile, i + 1));
     tile.addEventListener("mouseleave", () => handleTileUnhover(tile));
     
     puzzleArea.appendChild(tile);
-    tiles[i] = tile;
+    tiles[i + 1] = tile;
   }
 }
 
@@ -51,13 +49,7 @@ function updateTilePosition(tile, position) {
   
   tile.style.left = (col * 100) + "px";
   tile.style.top = (row * 100) + "px";
-  
-  // Set background position to show the correct part of the image
-  // Each tile should show the part of the image that corresponds to its NUMBER, not its current position
-  const tileNumber = parseInt(tile.getAttribute("data-number"));
-  const tileRow = Math.floor((tileNumber - 1) / 4);
-  const tileCol = (tileNumber - 1) % 4;
-  tile.style.backgroundPosition = `-${tileCol * 100}px -${tileRow * 100}px`;
+  tile.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
 }
 
 function getPosition(tileNumber) {
@@ -113,10 +105,9 @@ function handleTileUnhover(tile) {
 function shufflePuzzle() {
   // Generate solvable random state by making random valid moves from solved state
   // Reset to solved state first
-  for (let i = 0; i < 15; i++) {
-    gameState[i] = i + 1;
+  for (let i = 0; i < 16; i++) {
+    gameState[i] = i;
   }
-  gameState[15] = 0;
   blankPosition = 15;
   
   // Make 500 random valid moves to ensure good shuffling
