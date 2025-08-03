@@ -1,10 +1,6 @@
 body {
   font-family: sans-serif;
   text-align: center;
-  margin: 0;
-  padding: 20px;
-  min-height: 100vh;
-  /* Background will be set dynamically by theme system */
 }
 
 #puzzlearea {

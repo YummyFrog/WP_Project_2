@@ -50,44 +50,20 @@ const themeImages = {
 function applySelectedTheme() {
   const selectedTheme = localStorage.getItem('selectedTheme');
   if (selectedTheme && themeImages[selectedTheme]) {
-    const themeData = themeImages[selectedTheme];
-    currentTheme = themeData.puzzleBg;
+    currentTheme = themeImages[selectedTheme];
+    console.log('Applied theme:', selectedTheme, '- Image:', currentTheme);
     
-    console.log('Applied theme:', selectedTheme);
-    console.log('- Puzzle Background:', themeData.puzzleBg);
-    console.log('- Page Background:', themeData.pageBg);
-    
-    // Update CSS for puzzle pieces and page background
+    // Update CSS for all puzzle pieces
     const style = document.createElement('style');
     style.textContent = `
-      body {
-        background-image: url("${themeData.pageBg}") !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        background-attachment: fixed !important;
-        min-height: 100vh !important;
-      }
       .puzzlepiece {
-        background-image: url("${themeData.puzzleBg}") !important;
+        background-image: url("${currentTheme}") !important;
       }
     `;
     document.head.appendChild(style);
   } else {
     currentTheme = 'background1.jpg';
     console.log('Using default theme:', currentTheme);
-    
-    // Apply default styling
-    const style = document.createElement('style');
-    style.textContent = `
-      body {
-        background: #f0f0f0 !important;
-      }
-      .puzzlepiece {
-        background-image: url("${currentTheme}") !important;
-      }
-    `;
-    document.head.appendChild(style);
   }
 }
 

@@ -1,10 +1,6 @@
 body {
   font-family: sans-serif;
   text-align: center;
-  margin: 0;
-  padding: 20px;
-  min-height: 100vh;
-  /* Background will be set dynamically by theme system */
 }
 
 #puzzlearea {
@@ -24,7 +20,7 @@ body {
   color: white;
   text-align: center;
   line-height: 96px;
-  background-image: url("background1.jpg"); /* default - will be overridden by theme system */
+  background-image: url("background1.jpg");
   background-size: 400px 400px;
   cursor: pointer;
   transition: all 0.2s ease;

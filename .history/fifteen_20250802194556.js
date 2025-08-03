@@ -10,84 +10,36 @@ let moveCount = 0;
 let gameStarted = false;
 let currentTheme = 'background1'; // default theme
 
-// Theme mapping for puzzle pieces and backgrounds
+// Theme mapping
 const themeImages = {
-  'animals': {
-    puzzleBg: 'animals.jpg',
-    pageBg: 'animalsbg.png'
-  },
-  'nature': {
-    puzzleBg: 'nature.jpg',
-    pageBg: 'naturebg.png'
-  },
-  'space': {
-    puzzleBg: 'space.jpg',
-    pageBg: 'spacebg.png'
-  },
-  'ocean': {
-    puzzleBg: 'background1.jpg',
-    pageBg: 'oceanbg.png'
-  },
-  'desert': {
-    puzzleBg: 'background1.jpg',
-    pageBg: 'desertbg.png'
-  },
-  'cityscape': {
-    puzzleBg: 'background1.jpg',
-    pageBg: 'cityscapebg.png'
-  },
-  'marvel': {
-    puzzleBg: 'background1.jpg',
-    pageBg: 'marvelbg.png'
-  },
-  'retro': {
-    puzzleBg: 'background1.jpg',
-    pageBg: 'retrogamebg.png'
-  }
+  'animals': 'animals.jpg',
+  'nature': 'nature.jpg',
+  'space': 'space.jpg',
+  'ocean': 'background1.jpg', // fallback to default
+  'desert': 'background1.jpg', // fallback to default
+  'cityscape': 'background1.jpg', // fallback to default
+  'marvel': 'background1.jpg', // fallback to default
+  'retro': 'background1.jpg' // fallback to default
 };
 
 // Function to apply selected theme
 function applySelectedTheme() {
   const selectedTheme = localStorage.getItem('selectedTheme');
   if (selectedTheme && themeImages[selectedTheme]) {
-    const themeData = themeImages[selectedTheme];
-    currentTheme = themeData.puzzleBg;
+    currentTheme = themeImages[selectedTheme];
+    console.log('Applied theme:', selectedTheme, '- Image:', currentTheme);
     
-    console.log('Applied theme:', selectedTheme);
-    console.log('- Puzzle Background:', themeData.puzzleBg);
-    console.log('- Page Background:', themeData.pageBg);
-    
-    // Update CSS for puzzle pieces and page background
+    // Update CSS for all puzzle pieces
     const style = document.createElement('style');
     style.textContent = `
-      body {
-        background-image: url("${themeData.pageBg}") !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        background-attachment: fixed !important;
-        min-height: 100vh !important;
-      }
       .puzzlepiece {
-        background-image: url("${themeData.puzzleBg}") !important;
+        background-image: url("${currentTheme}") !important;
       }
     `;
     document.head.appendChild(style);
   } else {
     currentTheme = 'background1.jpg';
     console.log('Using default theme:', currentTheme);
-    
-    // Apply default styling
-    const style = document.createElement('style');
-    style.textContent = `
-      body {
-        background: #f0f0f0 !important;
-      }
-      .puzzlepiece {
-        background-image: url("${currentTheme}") !important;
-      }
-    `;
-    document.head.appendChild(style);
   }
 }
 
