@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fifteen Puzzle - Debug Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #puzzlearea { width: 400px; height: 400px; margin: 20px auto; position: relative; border: 2px solid black; }
+    .puzzlepiece { width: 96px; height: 96px; border: 2px solid black; position: absolute; font-size: 32pt; color: white; text-align: center; line-height: 96px; background-image: url("background1.jpg"); background-size: 400px 400px; cursor: pointer; transition: all 0.2s ease; }
+    .movablepiece { border-color: red !important; color: #006600 !important; text-decoration: underline; }
+    #debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+    button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Fifteen Puzzle - Debug Test</h1>
+  
+  <div id="debug">
+    <h3>Debug Info:</h3>
+    <p>Time: <span id="time">0</span> seconds | Moves: <span id="moves">0</span></p>
+    <p id="status">Ready to test...</p>
+  </div>
+  
+  <div style="text-align: center;">
+    <button id="shufflebutton" onclick="testTimer()">Test Timer (Shuffle)</button>
+    <button id="cheatbutton" onclick="testCheat()">Test Cheat</button>
+    <button onclick="resetTest()">Reset</button>
+  </div>
+  
+  <div id="puzzlearea"></div>
+  <div id="win-message" style="margin-top: 20px; font-weight: bold; text-align: center;"></div>
+  
+  <script>
+    let timeElapsed = 0;
+    let moveCount = 0;
+    let timerInterval = null;
+    let gameStarted = false;
+    
+    function updateStatus(message) {
+      document.getElementById('status').textContent = message;
+      console.log(message);
+    }
+    
+    function updateStats() {
+      const timeElement = document.getElementById("time");
+      const movesElement = document.getElementById("moves");
+      
+      if (timeElement) {
+        timeElement.textContent = timeElapsed;
+      }
+      if (movesElement) {
+        movesElement.textContent = moveCount;
+      }
+      
+      updateStatus(`Stats updated - Time: ${timeElapsed}, Moves: ${moveCount}`);
+    }
+    
+    function testTimer() {
+      updateStatus("Testing timer...");
+      
+      // Stop any existing timer
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+      
+      timeElapsed = 0;
+      updateStats();
+      
+      // Start timer
+      timerInterval = setInterval(() => {
+        timeElapsed++;
+        updateStats();
+      }, 1000);
+      
+      gameStarted = true;
+      updateStatus(`Timer started! Should count up every second.`);
+    }
+    
+    function testCheat() {
+      if (!gameStarted) {
+        alert("Please test timer first!");
+        return;
+      }
+      
+      updateStatus("Testing cheat...");
+      
+      // Stop timer
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        updateStatus("Timer stopped for cheat");
+      }
+      
+      // Simulate solving
+      setTimeout(() => {
+        document.getElementById("win-message").textContent = "🎉 Cheat Completed! Puzzle Solved!";
+        updateStatus("Cheat test completed successfully!");
+      }, 500);
+    }
+    
+    function resetTest() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+      timeElapsed = 0;
+      moveCount = 0;
+      gameStarted = false;
+      updateStats();
+      document.getElementById("win-message").textContent = "";
+      updateStatus("Test reset. Ready to test again.");
+    }
+    
+    // Initialize
+    updateStatus("Test page loaded. Click 'Test Timer' to start.");
+  </script>
+</body>
+</html> 

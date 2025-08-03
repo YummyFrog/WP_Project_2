@@ -8,40 +8,6 @@ let timerInterval = null;
 let timeElapsed = 0;
 let moveCount = 0;
 let gameStarted = false;
-let currentTheme = 'background1'; // default theme
-
-// Theme mapping
-const themeImages = {
-  'animals': 'animals.jpg',
-  'nature': 'nature.jpg',
-  'space': 'space.jpg',
-  'ocean': 'background1.jpg', // fallback to default
-  'desert': 'background1.jpg', // fallback to default
-  'cityscape': 'background1.jpg', // fallback to default
-  'marvel': 'background1.jpg', // fallback to default
-  'retro': 'background1.jpg' // fallback to default
-};
-
-// Function to apply selected theme
-function applySelectedTheme() {
-  const selectedTheme = localStorage.getItem('selectedTheme');
-  if (selectedTheme && themeImages[selectedTheme]) {
-    currentTheme = themeImages[selectedTheme];
-    console.log('Applied theme:', selectedTheme, '- Image:', currentTheme);
-    
-    // Update CSS for all puzzle pieces
-    const style = document.createElement('style');
-    style.textContent = `
-      .puzzlepiece {
-        background-image: url("${currentTheme}") !important;
-      }
-    `;
-    document.head.appendChild(style);
-  } else {
-    currentTheme = 'background1.jpg';
-    console.log('Using default theme:', currentTheme);
-  }
-}
 
 // Debug function to check if elements exist
 function debugElements() {
@@ -109,9 +75,6 @@ window.onload = function () {
     console.error('CRITICAL: cheatbutton element not found!');
     return;
   }
-  
-  // Apply selected theme
-  applySelectedTheme();
   
   initializePuzzle();
   setupEventListeners();
