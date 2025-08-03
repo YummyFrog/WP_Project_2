@@ -484,7 +484,7 @@ function cheatSolve() {
         solveInstantly(); // Fallback to instant solve
       }
     }
-  }, 30000); // 30 second timeout for A* solutions
+  }, 60000); // 60 second timeout for complete solutions
   
   // Find solution steps and animate them
   solvePuzzleStepByStep(savedState, savedBlankPos);
@@ -531,41 +531,7 @@ function findCompleteSolution(initialState, initialBlankPos) {
   }
   
   console.log("Starting A* optimal solver...");
-  console.log("Initial state:", initialState);
-  
-  // Convert state format for A* algorithm
-  const aStarBoard = convertGameStateForAStar(initialState);
-  const solution = aStarSearch(aStarBoard);
-  
-  if (solution && solution.length > 0) {
-    console.log("A* found solution with", solution.length, "moves");
-    return solution;
-  } else {
-    console.log("A* could not find solution, using fallback");
-    // Fallback to a simpler approach if A* fails
-    return findSimpleFallbackSolution(initialState, initialBlankPos);
-  }
-}
-
-// Simple fallback if A* fails
-function findSimpleFallbackSolution(initialState, initialBlankPos) {
-  const moves = [];
-  const maxMoves = 30;
-  
-  // Try to make some progress toward solution
-  for (let i = 0; i < maxMoves; i++) {
-    const validMoves = getValidMoves(initialState, initialBlankPos);
-    if (validMoves.length === 0) break;
-    
-    // Pick a random valid move as fallback
-    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-    moves.push(randomMove);
-    
-    if (moves.length >= 15) break; // Don't make too many moves
-  }
-  
-  console.log("Fallback solution:", moves.length, "moves");
-  return moves;
+  return aStarSearch(initialState);
 }
 
 // A* Algorithm Implementation (from working solver)
@@ -836,7 +802,7 @@ function animateSolutionSteps(steps) {
   }
   
   let stepIndex = 0;
-  const animationSpeed = 600; // Faster for optimal A* solutions
+  const animationSpeed = 800; // Balanced speed to show all steps clearly
   
   function animateNextStep() {
     if (stepIndex >= steps.length) {

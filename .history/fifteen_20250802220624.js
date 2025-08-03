@@ -463,7 +463,6 @@ function cheatSolve() {
   
   if (checkIfSolved()) {
     alert("Puzzle is already solved!");
-    resetCheatButton();
     return;
   }
   
@@ -475,354 +474,70 @@ function cheatSolve() {
   // Stop the timer during solving animation
   stopTimer();
   
-  // Safety timeout to reset button if something goes wrong
-  setTimeout(() => {
-    if (isSolving) {
-      console.log("Safety timeout triggered, resetting cheat button");
-      resetCheatButton();
-      if (!checkIfSolved()) {
-        solveInstantly(); // Fallback to instant solve
-      }
-    }
-  }, 30000); // 30 second timeout for A* solutions
-  
   // Find solution steps and animate them
   solvePuzzleStepByStep(savedState, savedBlankPos);
 }
 
 // Step-by-step puzzle solver with animation
 function solvePuzzleStepByStep(initialState, initialBlankPos) {
-  console.log("Finding complete solution path...");
+  console.log("Finding solution steps...");
   
-  // Show "Calculating..." on button
-  const cheatButton = document.getElementById("cheatbutton");
-  if (cheatButton) {
-    cheatButton.textContent = "Calculating...";
+  // Use a simple, fast approach instead of complex BFS
+  const solutionSteps = findSimpleSolutionSteps();
+  
+  if (solutionSteps.length === 0) {
+    console.log("No moves needed, puzzle might be solved or unsolvable");
+    solveInstantly();
+    return;
   }
   
-  // Use timeout to prevent UI blocking during calculation
-  setTimeout(() => {
-    const solutionSteps = findCompleteSolution(initialState, initialBlankPos);
-    
-    if (solutionSteps.length === 0) {
-      console.log("Puzzle is already solved or no solution found");
-      if (checkIfSolved()) {
-        resetCheatButton();
-        alert("Puzzle is already solved!");
-      } else {
-        console.log("No solution found, falling back to instant solve");
-        solveInstantly();
-      }
-      return;
-    }
-    
-    console.log(`Found complete solution in ${solutionSteps.length} steps:`, solutionSteps);
-    animateSolutionSteps(solutionSteps);
-  }, 100);
+  console.log(`Found solution in ${solutionSteps.length} steps`);
+  animateSolutionSteps(solutionSteps);
 }
 
-// A* optimal solver integrated from working implementation
-function findCompleteSolution(initialState, initialBlankPos) {
-  const targetState = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
-  
-  // Check if already solved
-  if (arraysEqual(initialState, targetState)) {
-    return [];
-  }
-  
-  console.log("Starting A* optimal solver...");
-  console.log("Initial state:", initialState);
-  
-  // Convert state format for A* algorithm
-  const aStarBoard = convertGameStateForAStar(initialState);
-  const solution = aStarSearch(aStarBoard);
-  
-  if (solution && solution.length > 0) {
-    console.log("A* found solution with", solution.length, "moves");
-    return solution;
-  } else {
-    console.log("A* could not find solution, using fallback");
-    // Fallback to a simpler approach if A* fails
-    return findSimpleFallbackSolution(initialState, initialBlankPos);
-  }
-}
-
-// Simple fallback if A* fails
-function findSimpleFallbackSolution(initialState, initialBlankPos) {
+// Simple and fast solution finder
+function findSimpleSolutionSteps() {
   const moves = [];
-  const maxMoves = 30;
+  const maxMoves = 8; // Limit to prevent long sequences
   
-  // Try to make some progress toward solution
-  for (let i = 0; i < maxMoves; i++) {
-    const validMoves = getValidMoves(initialState, initialBlankPos);
-    if (validMoves.length === 0) break;
+  // Find tiles that are out of place and can move
+  for (let attempts = 0; attempts < maxMoves; attempts++) {
+    const movableTiles = [];
     
-    // Pick a random valid move as fallback
-    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-    moves.push(randomMove);
-    
-    if (moves.length >= 15) break; // Don't make too many moves
-  }
-  
-  console.log("Fallback solution:", moves.length, "moves");
-  return moves;
-}
-
-// A* Algorithm Implementation (from working solver)
-function aStarSearch(startBoard) {
-  const goalState = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
-  
-  if (boardsEqual(startBoard, goalState)) {
-    return [];
-  }
-
-  // Priority queue implementation using array
-  const openSet = [{
-    board: startBoard,
-    g: 0,
-    h: manhattanDistance(startBoard) + linearConflict(startBoard),
-    f: 0,
-    path: []
-  }];
-  
-  openSet[0].f = openSet[0].g + openSet[0].h;
-  
-  const closedSet = new Set();
-  const maxIterations = 100000; // Prevent infinite loops
-  let iterations = 0;
-
-  while (openSet.length > 0 && iterations < maxIterations) {
-    iterations++;
-    
-    // Get node with lowest f score
-    openSet.sort((a, b) => a.f - b.f);
-    const current = openSet.shift();
-    
-    const boardKey = current.board.join(',');
-    if (closedSet.has(boardKey)) {
-      continue;
-    }
-    closedSet.add(boardKey);
-    
-    // Check if goal reached
-    if (boardsEqual(current.board, goalState)) {
-      console.log(`A* Solution found! Moves: ${current.path.length}, Iterations: ${iterations}`);
-      // Convert path format to match existing system
-      return current.path.map(move => move.tile);
-    }
-    
-    // Generate neighbors
-    const neighbors = getNeighbors(current.board);
-    
-    for (const neighbor of neighbors) {
-      const neighborKey = neighbor.board.join(',');
-      if (closedSet.has(neighborKey)) {
-        continue;
-      }
-      
-      const g = current.g + 1;
-      const h = manhattanDistance(neighbor.board) + linearConflict(neighbor.board);
-      const f = g + h;
-      
-      // Check if this path to neighbor is better
-      const existingIndex = openSet.findIndex(node => 
-        boardsEqual(node.board, neighbor.board)
-      );
-      
-      if (existingIndex === -1 || g < openSet[existingIndex].g) {
-        const newNode = {
-          board: neighbor.board,
-          g: g,
-          h: h,
-          f: f,
-          path: [...current.path, neighbor.move]
-        };
+    // Get tiles that can currently move
+    for (let tile = 1; tile <= 15; tile++) {
+      if (canMoveTile(tile)) {
+        const currentPos = getPosition(tile);
+        const correctPos = tile - 1;
         
-        if (existingIndex === -1) {
-          openSet.push(newNode);
-        } else {
-          openSet[existingIndex] = newNode;
-        }
-      }
-    }
-    
-    // Limit open set size to prevent memory issues
-    if (openSet.length > 5000) {
-      openSet.sort((a, b) => a.f - b.f);
-      openSet.splice(2000); // Keep only best 2000 nodes
-    }
-  }
-  
-  console.log(`A* search completed. Iterations: ${iterations}. No solution found.`);
-  return null; // No solution found
-}
-
-// Convert game state format to A* format and handle result
-function convertGameStateForAStar(gameState) {
-  // Convert from current format [1,2,3...15,0] to A* format [1,2,3...15,0]
-  // The game state is already in the right format, just need to handle empty tile
-  return gameState.map(tile => tile === 0 ? 0 : tile);
-}
-
-// Manhattan Distance Heuristic
-function manhattanDistance(board) {
-  let distance = 0;
-  const size = 4;
-  const emptyTile = 0;
-  
-  for (let i = 0; i < 16; i++) {
-    if (board[i] !== emptyTile) {
-      const currentRow = Math.floor(i / size);
-      const currentCol = i % size;
-      const targetPos = board[i] - 1; // Convert to 0-based indexing
-      const targetRow = Math.floor(targetPos / size);
-      const targetCol = targetPos % size;
-      distance += Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
-    }
-  }
-  return distance;
-}
-
-// Linear Conflict Heuristic (enhances Manhattan distance)
-function linearConflict(board) {
-  let conflicts = 0;
-  const size = 4;
-  const emptyTile = 0;
-  
-  // Row conflicts
-  for (let row = 0; row < size; row++) {
-    const rowTiles = [];
-    for (let col = 0; col < size; col++) {
-      const pos = row * size + col;
-      const tile = board[pos];
-      if (tile !== emptyTile) {
-        const targetRow = Math.floor((tile - 1) / size);
-        if (targetRow === row) {
-          rowTiles.push({ tile, col });
-        }
-      }
-    }
-    
-    // Count conflicts in this row
-    for (let i = 0; i < rowTiles.length - 1; i++) {
-      for (let j = i + 1; j < rowTiles.length; j++) {
-        const tile1 = rowTiles[i];
-        const tile2 = rowTiles[j];
-        const targetCol1 = (tile1.tile - 1) % size;
-        const targetCol2 = (tile2.tile - 1) % size;
+        // Prioritize tiles that are close to their correct position
+        const distance = Math.abs(Math.floor(currentPos / 4) - Math.floor(correctPos / 4)) + 
+                        Math.abs(currentPos % 4 - correctPos % 4);
         
-        if ((tile1.col < tile2.col && targetCol1 > targetCol2) ||
-            (tile1.col > tile2.col && targetCol1 < targetCol2)) {
-          conflicts++;
-        }
-      }
-    }
-  }
-  
-  // Column conflicts
-  for (let col = 0; col < size; col++) {
-    const colTiles = [];
-    for (let row = 0; row < size; row++) {
-      const pos = row * size + col;
-      const tile = board[pos];
-      if (tile !== emptyTile) {
-        const targetCol = (tile - 1) % size;
-        if (targetCol === col) {
-          colTiles.push({ tile, row });
-        }
+        movableTiles.push({ tile, distance, currentPos, correctPos });
       }
     }
     
-    // Count conflicts in this column
-    for (let i = 0; i < colTiles.length - 1; i++) {
-      for (let j = i + 1; j < colTiles.length; j++) {
-        const tile1 = colTiles[i];
-        const tile2 = colTiles[j];
-        const targetRow1 = Math.floor((tile1.tile - 1) / size);
-        const targetRow2 = Math.floor((tile2.tile - 1) / size);
-        
-        if ((tile1.row < tile2.row && targetRow1 > targetRow2) ||
-            (tile1.row > tile2.row && targetRow1 < targetRow2)) {
-          conflicts++;
-        }
-      }
-    }
-  }
-  
-  return conflicts * 2;
-}
-
-// Generate all possible neighbor states
-function getNeighbors(board) {
-  const neighbors = [];
-  const emptyPos = board.indexOf(0);
-  const size = 4;
-  const emptyRow = Math.floor(emptyPos / size);
-  const emptyCol = emptyPos % size;
-  
-  const directions = [
-    {row: -1, col: 0, name: 'up'},
-    {row: 1, col: 0, name: 'down'},
-    {row: 0, col: -1, name: 'left'},
-    {row: 0, col: 1, name: 'right'}
-  ];
-  
-  for (const dir of directions) {
-    const newRow = emptyRow + dir.row;
-    const newCol = emptyCol + dir.col;
+    if (movableTiles.length === 0) break;
     
-    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
-      const newPos = newRow * size + newCol;
-      const newBoard = [...board];
-      [newBoard[emptyPos], newBoard[newPos]] = [newBoard[newPos], newBoard[emptyPos]];
-      
-      neighbors.push({
-        board: newBoard,
-        move: {tile: board[newPos], from: newPos, to: emptyPos}
-      });
-    }
-  }
-  
-  return neighbors;
-}
-
-// Helper function to compare boards
-function boardsEqual(board1, board2) {
-  return board1.every((tile, index) => tile === board2[index]);
-}
-
-// Get valid moves for existing system compatibility
-function getValidMoves(state, blankPos) {
-  const moves = [];
-  const row = Math.floor(blankPos / 4);
-  const col = blankPos % 4;
-  
-  const directions = [
-    { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }
-  ];
-  
-  for (const dir of directions) {
-    const newRow = row + dir.dr;
-    const newCol = col + dir.dc;
+    // Sort by distance to correct position (closer tiles first)
+    movableTiles.sort((a, b) => a.distance - b.distance);
     
-    if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4) {
-      const newPos = newRow * 4 + newCol;
-      const tile = state[newPos];
-      if (tile !== 0) {
-        moves.push(tile);
-      }
+    // Choose the best tile to move
+    let chosenTile = null;
+    
+    // First, try to find a tile that would move closer to its correct position
+    for (const tileInfo of movableTiles) {
+      moves.push(tileInfo.tile);
+      chosenTile = tileInfo.tile;
+      break; // Just take the first (best) option
     }
+    
+    if (!chosenTile) break;
   }
   
   return moves;
 }
-
-// Helper function to compare arrays (use boardsEqual for consistency)
-function arraysEqual(a, b) {
-  return boardsEqual(a, b);
-}
-
-// Human-like systematic solver provides complete step-by-step solution
 
 // Animate the solution steps
 function animateSolutionSteps(steps) {
@@ -836,18 +551,14 @@ function animateSolutionSteps(steps) {
   }
   
   let stepIndex = 0;
-  const animationSpeed = 600; // Faster for optimal A* solutions
+  const animationSpeed = 600; // Faster animation - 600ms instead of 800ms
   
   function animateNextStep() {
     if (stepIndex >= steps.length) {
       // Animation complete - if not fully solved, solve the rest instantly
       setTimeout(() => {
-        const cheatButton = document.getElementById("cheatbutton");
         if (!checkIfSolved()) {
           console.log("Animation complete but not fully solved, finishing instantly");
-          if (cheatButton) {
-            cheatButton.textContent = "Completing...";
-          }
           solveInstantly();
         } else {
           showWinMessage();
@@ -860,12 +571,6 @@ function animateSolutionSteps(steps) {
     const tileToMove = steps[stepIndex];
     console.log(`Step ${stepIndex + 1}: Moving tile ${tileToMove}`);
     
-    // Show progress
-    const cheatButton = document.getElementById("cheatbutton");
-    if (cheatButton) {
-      cheatButton.textContent = `Step ${stepIndex + 1}/${steps.length}: Moving ${tileToMove}`;
-    }
-    
     // Check if the move is still valid
     if (!canMoveTile(tileToMove)) {
       console.log(`Tile ${tileToMove} can no longer move, skipping`);
@@ -876,10 +581,9 @@ function animateSolutionSteps(steps) {
     
     // Highlight the tile that's about to move
     if (tiles[tileToMove]) {
-      tiles[tileToMove].style.transition = "all 0.3s ease-in-out";
-      tiles[tileToMove].style.transform = "scale(1.15)";
+      tiles[tileToMove].style.transition = "all 0.2s ease-in-out";
+      tiles[tileToMove].style.transform = "scale(1.1)";
       tiles[tileToMove].style.border = "4px solid #FFD700";
-      tiles[tileToMove].style.boxShadow = "0 0 15px #FFD700";
     }
     
     setTimeout(() => {
@@ -888,22 +592,24 @@ function animateSolutionSteps(steps) {
       moveCount++;
       updateStats();
       
-              // Reset tile styling
-        if (tiles[tileToMove]) {
-          tiles[tileToMove].style.transform = "scale(1)";
-          tiles[tileToMove].style.border = "3px solid white";
-          tiles[tileToMove].style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.3)";
-        }
+      // Reset tile styling
+      if (tiles[tileToMove]) {
+        tiles[tileToMove].style.transform = "scale(1)";
+        tiles[tileToMove].style.border = "3px solid white";
+      }
       
       stepIndex++;
-      setTimeout(animateNextStep, animationSpeed * 0.3);
-    }, animationSpeed * 0.4);
+      setTimeout(animateNextStep, animationSpeed * 0.5);
+    }, animationSpeed * 0.2);
   }
   
   animateNextStep();
 }
 
-// Human-like systematic solver provides complete step-by-step solution
+// Helper function to compare arrays
+function arraysEqual(a, b) {
+  return a.length === b.length && a.every((val, i) => val === b[i]);
+}
 
 // Keep the instant solve as fallback
 function solveInstantly() {

@@ -484,7 +484,7 @@ function cheatSolve() {
         solveInstantly(); // Fallback to instant solve
       }
     }
-  }, 30000); // 30 second timeout for A* solutions
+  }, 60000); // 60 second timeout for complete solutions
   
   // Find solution steps and animate them
   solvePuzzleStepByStep(savedState, savedBlankPos);
@@ -531,41 +531,7 @@ function findCompleteSolution(initialState, initialBlankPos) {
   }
   
   console.log("Starting A* optimal solver...");
-  console.log("Initial state:", initialState);
-  
-  // Convert state format for A* algorithm
-  const aStarBoard = convertGameStateForAStar(initialState);
-  const solution = aStarSearch(aStarBoard);
-  
-  if (solution && solution.length > 0) {
-    console.log("A* found solution with", solution.length, "moves");
-    return solution;
-  } else {
-    console.log("A* could not find solution, using fallback");
-    // Fallback to a simpler approach if A* fails
-    return findSimpleFallbackSolution(initialState, initialBlankPos);
-  }
-}
-
-// Simple fallback if A* fails
-function findSimpleFallbackSolution(initialState, initialBlankPos) {
-  const moves = [];
-  const maxMoves = 30;
-  
-  // Try to make some progress toward solution
-  for (let i = 0; i < maxMoves; i++) {
-    const validMoves = getValidMoves(initialState, initialBlankPos);
-    if (validMoves.length === 0) break;
-    
-    // Pick a random valid move as fallback
-    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-    moves.push(randomMove);
-    
-    if (moves.length >= 15) break; // Don't make too many moves
-  }
-  
-  console.log("Fallback solution:", moves.length, "moves");
-  return moves;
+  return aStarSearch(initialState);
 }
 
 // A* Algorithm Implementation (from working solver)
@@ -657,11 +623,65 @@ function aStarSearch(startBoard) {
   return null; // No solution found
 }
 
-// Convert game state format to A* format and handle result
-function convertGameStateForAStar(gameState) {
-  // Convert from current format [1,2,3...15,0] to A* format [1,2,3...15,0]
-  // The game state is already in the right format, just need to handle empty tile
-  return gameState.map(tile => tile === 0 ? 0 : tile);
+// Simple greedy approach as fallback
+function findGreedySolution(initialState, initialBlankPos) {
+  const moves = [];
+  const state = [...initialState];
+  let blankPos = initialBlankPos;
+  const maxMoves = 40; // Reasonable limit
+  
+  console.log("Using greedy approach as fallback");
+  
+  for (let moveCount = 0; moveCount < maxMoves; moveCount++) {
+    // Check if solved
+    if (arraysEqual(state, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0])) {
+      console.log("Puzzle solved with greedy approach!");
+      break;
+    }
+    
+    const validMoves = getValidMoves(state, blankPos);
+    if (validMoves.length === 0) break;
+    
+    // Find the move that improves the puzzle the most
+    let bestMove = null;
+    let bestScore = -Infinity;
+    
+    for (const move of validMoves) {
+      // Calculate how "good" this move is
+      const currentPos = state.indexOf(move);
+      const targetPos = move - 1;
+      
+      // Distance from current position to target position
+      const currentDistance = Math.abs(Math.floor(currentPos / 4) - Math.floor(targetPos / 4)) + 
+                            Math.abs(currentPos % 4 - targetPos % 4);
+      
+      // Distance if we make this move (tile goes to blank position)
+      const newDistance = Math.abs(Math.floor(blankPos / 4) - Math.floor(targetPos / 4)) + 
+                         Math.abs(blankPos % 4 - targetPos % 4);
+      
+      const improvement = currentDistance - newDistance;
+      
+      if (improvement > bestScore) {
+        bestScore = improvement;
+        bestMove = move;
+      }
+    }
+    
+    // If no improving move found, just pick the first valid move
+    if (!bestMove) {
+      bestMove = validMoves[0];
+    }
+    
+    // Make the move
+    moves.push(bestMove);
+    const movePos = state.indexOf(bestMove);
+    state[blankPos] = bestMove;
+    state[movePos] = 0;
+    blankPos = movePos;
+  }
+  
+  console.log(`Greedy solution found ${moves.length} moves`);
+  return moves;
 }
 
 // Manhattan Distance Heuristic
@@ -817,9 +837,9 @@ function getValidMoves(state, blankPos) {
   return moves;
 }
 
-// Helper function to compare arrays (use boardsEqual for consistency)
+// Helper function to compare arrays
 function arraysEqual(a, b) {
-  return boardsEqual(a, b);
+  return a.length === b.length && a.every((val, i) => val === b[i]);
 }
 
 // Human-like systematic solver provides complete step-by-step solution
@@ -836,7 +856,7 @@ function animateSolutionSteps(steps) {
   }
   
   let stepIndex = 0;
-  const animationSpeed = 600; // Faster for optimal A* solutions
+  const animationSpeed = 800; // Balanced speed to show all steps clearly
   
   function animateNextStep() {
     if (stepIndex >= steps.length) {

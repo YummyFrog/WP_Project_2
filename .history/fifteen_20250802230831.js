@@ -836,7 +836,7 @@ function animateSolutionSteps(steps) {
   }
   
   let stepIndex = 0;
-  const animationSpeed = 600; // Faster for optimal A* solutions
+  const animationSpeed = 800; // Balanced speed to show all steps clearly
   
   function animateNextStep() {
     if (stepIndex >= steps.length) {

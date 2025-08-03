@@ -484,7 +484,7 @@ function cheatSolve() {
         solveInstantly(); // Fallback to instant solve
       }
     }
-  }, 30000); // 30 second timeout for A* solutions
+  }, 30000); // 30 second timeout for longer solutions
   
   // Find solution steps and animate them
   solvePuzzleStepByStep(savedState, savedBlankPos);
@@ -521,7 +521,7 @@ function solvePuzzleStepByStep(initialState, initialBlankPos) {
   }, 100);
 }
 
-// A* optimal solver integrated from working implementation
+// Human-like AI solver that solves the puzzle systematically
 function findCompleteSolution(initialState, initialBlankPos) {
   const targetState = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
   
@@ -530,275 +530,231 @@ function findCompleteSolution(initialState, initialBlankPos) {
     return [];
   }
   
-  console.log("Starting A* optimal solver...");
-  console.log("Initial state:", initialState);
-  
-  // Convert state format for A* algorithm
-  const aStarBoard = convertGameStateForAStar(initialState);
-  const solution = aStarSearch(aStarBoard);
-  
-  if (solution && solution.length > 0) {
-    console.log("A* found solution with", solution.length, "moves");
-    return solution;
-  } else {
-    console.log("A* could not find solution, using fallback");
-    // Fallback to a simpler approach if A* fails
-    return findSimpleFallbackSolution(initialState, initialBlankPos);
-  }
+  console.log("Starting human-like systematic solver...");
+  return solveSystematically(initialState, initialBlankPos);
 }
 
-// Simple fallback if A* fails
-function findSimpleFallbackSolution(initialState, initialBlankPos) {
+// Systematic solver that places each tile in order like a human would
+function solveSystematically(initialState, initialBlankPos) {
   const moves = [];
-  const maxMoves = 30;
+  const state = [...initialState];
+  let blankPos = initialBlankPos;
   
-  // Try to make some progress toward solution
-  for (let i = 0; i < maxMoves; i++) {
-    const validMoves = getValidMoves(initialState, initialBlankPos);
-    if (validMoves.length === 0) break;
+  console.log("Initial puzzle state:", state);
+  
+  // Solve each position systematically (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+  for (let targetPosition = 0; targetPosition < 15; targetPosition++) {
+    const targetTile = targetPosition + 1;
     
-    // Pick a random valid move as fallback
-    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-    moves.push(randomMove);
+    console.log(`\n=== Working on placing tile ${targetTile} in position ${targetPosition} ===`);
     
-    if (moves.length >= 15) break; // Don't make too many moves
+    // Keep working on this tile until it's in the correct position
+    let attempts = 0;
+    const maxAttemptsPerTile = 200; // High limit but prevents infinite loops
+    
+    while (state[targetPosition] !== targetTile && attempts < maxAttemptsPerTile) {
+      attempts++;
+      
+      const currentTilePos = state.indexOf(targetTile);
+      console.log(`Attempt ${attempts}: Tile ${targetTile} is currently at position ${currentTilePos}, target is ${targetPosition}`);
+      
+      // Find the best move to make progress toward placing this tile
+      const bestMove = findBestMoveForTile(state, blankPos, targetTile, targetPosition);
+      
+      if (bestMove) {
+        moves.push(bestMove);
+        
+        // Execute the move
+        const movePos = state.indexOf(bestMove);
+        state[blankPos] = bestMove;
+        state[movePos] = 0;
+        blankPos = movePos;
+        
+        console.log(`  Made move: ${bestMove}, new state:`, [...state]);
+        console.log(`  Blank is now at position: ${blankPos}`);
+      } else {
+        console.log(`  No valid move found, trying alternative approach...`);
+        // Try any valid move to break potential deadlock
+        const validMoves = getValidMoves(state, blankPos);
+        if (validMoves.length > 0) {
+          const randomMove = validMoves[0];
+          moves.push(randomMove);
+          
+          const movePos = state.indexOf(randomMove);
+          state[blankPos] = randomMove;
+          state[movePos] = 0;
+          blankPos = movePos;
+          
+          console.log(`  Made fallback move: ${randomMove}`);
+        } else {
+          console.log(`  ERROR: No valid moves available!`);
+          break;
+        }
+      }
+      
+      // Check if we've solved the whole puzzle early
+      if (arraysEqual(state, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0])) {
+        console.log("Puzzle completely solved!");
+        break;
+      }
+    }
+    
+    if (state[targetPosition] === targetTile) {
+      console.log(`✓ Successfully placed tile ${targetTile} in position ${targetPosition}`);
+    } else {
+      console.log(`⚠ Could not place tile ${targetTile} in position ${targetPosition} after ${attempts} attempts`);
+    }
+    
+    // If we've solved the whole puzzle, stop
+    if (arraysEqual(state, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0])) {
+      console.log("Puzzle completely solved during systematic placement!");
+      break;
+    }
   }
   
-  console.log("Fallback solution:", moves.length, "moves");
+  // Final check - if not completely solved, try to finish it
+  if (!arraysEqual(state, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0])) {
+    console.log("Puzzle not completely solved, adding finishing moves...");
+    const finishingMoves = finishPuzzle(state, blankPos);
+    moves.push(...finishingMoves);
+  }
+  
+  console.log(`\nSolution complete! Total moves: ${moves.length}`);
+  console.log("Final move sequence:", moves);
+  
   return moves;
 }
 
-// A* Algorithm Implementation (from working solver)
-function aStarSearch(startBoard) {
-  const goalState = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+// Find the best move to help place a specific tile in its target position
+function findBestMoveForTile(state, blankPos, targetTile, targetPosition) {
+  const currentTilePos = state.indexOf(targetTile);
   
-  if (boardsEqual(startBoard, goalState)) {
-    return [];
+  // If tile is already in correct position, skip
+  if (currentTilePos === targetPosition) {
+    return null;
   }
-
-  // Priority queue implementation using array
-  const openSet = [{
-    board: startBoard,
-    g: 0,
-    h: manhattanDistance(startBoard) + linearConflict(startBoard),
-    f: 0,
-    path: []
-  }];
   
-  openSet[0].f = openSet[0].g + openSet[0].h;
+  // If the target tile is adjacent to blank space, move it directly
+  if (isAdjacent(currentTilePos, blankPos)) {
+    return targetTile;
+  }
   
-  const closedSet = new Set();
-  const maxIterations = 100000; // Prevent infinite loops
-  let iterations = 0;
+  // Move blank space toward the target tile
+  return getBestMoveTowardTarget(state, blankPos, currentTilePos);
+}
 
-  while (openSet.length > 0 && iterations < maxIterations) {
-    iterations++;
+// Get the best move to bring blank space closer to target position
+function getBestMoveTowardTarget(state, blankPos, targetPos) {
+  const validMoves = getValidMoves(state, blankPos);
+  
+  if (validMoves.length === 0) {
+    return null;
+  }
+  
+  let bestMove = null;
+  let bestDistance = Infinity;
+  
+  for (const move of validMoves) {
+    const moveCurrentPos = state.indexOf(move);
     
-    // Get node with lowest f score
-    openSet.sort((a, b) => a.f - b.f);
-    const current = openSet.shift();
+    // Calculate how close this move would bring the blank to target
+    const distance = calculateDistance(moveCurrentPos, targetPos);
     
-    const boardKey = current.board.join(',');
-    if (closedSet.has(boardKey)) {
-      continue;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestMove = move;
     }
-    closedSet.add(boardKey);
-    
-    // Check if goal reached
-    if (boardsEqual(current.board, goalState)) {
-      console.log(`A* Solution found! Moves: ${current.path.length}, Iterations: ${iterations}`);
-      // Convert path format to match existing system
-      return current.path.map(move => move.tile);
+  }
+  
+  return bestMove;
+}
+
+// Calculate Manhattan distance between two positions
+function calculateDistance(pos1, pos2) {
+  const row1 = Math.floor(pos1 / 4);
+  const col1 = pos1 % 4;
+  const row2 = Math.floor(pos2 / 4);
+  const col2 = pos2 % 4;
+  
+  return Math.abs(row1 - row2) + Math.abs(col1 - col2);
+}
+
+// Try to finish solving the puzzle if close to completion
+function finishPuzzle(state, blankPos) {
+  const moves = [];
+  const workingState = [...state];
+  let workingBlankPos = blankPos;
+  
+  console.log("Attempting to finish puzzle...");
+  
+  // Try up to 100 more moves to complete the puzzle
+  for (let i = 0; i < 100; i++) {
+    if (arraysEqual(workingState, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0])) {
+      console.log("Puzzle finished!");
+      break;
     }
     
-    // Generate neighbors
-    const neighbors = getNeighbors(current.board);
+    // Find any tile that's out of place and can be moved
+    let bestMove = null;
+    let bestImprovement = -1;
     
-    for (const neighbor of neighbors) {
-      const neighborKey = neighbor.board.join(',');
-      if (closedSet.has(neighborKey)) {
-        continue;
-      }
+    const validMoves = getValidMoves(workingState, workingBlankPos);
+    
+    for (const move of validMoves) {
+      const currentPos = workingState.indexOf(move);
+      const targetPos = move - 1;
       
-      const g = current.g + 1;
-      const h = manhattanDistance(neighbor.board) + linearConflict(neighbor.board);
-      const f = g + h;
+      // Calculate how much this move improves the puzzle
+      const currentDistance = calculateDistance(currentPos, targetPos);
       
-      // Check if this path to neighbor is better
-      const existingIndex = openSet.findIndex(node => 
-        boardsEqual(node.board, neighbor.board)
-      );
+      // Simulate the move
+      const newPos = workingBlankPos;
+      const newDistance = calculateDistance(newPos, targetPos);
       
-      if (existingIndex === -1 || g < openSet[existingIndex].g) {
-        const newNode = {
-          board: neighbor.board,
-          g: g,
-          h: h,
-          f: f,
-          path: [...current.path, neighbor.move]
-        };
-        
-        if (existingIndex === -1) {
-          openSet.push(newNode);
-        } else {
-          openSet[existingIndex] = newNode;
-        }
-      }
-    }
-    
-    // Limit open set size to prevent memory issues
-    if (openSet.length > 5000) {
-      openSet.sort((a, b) => a.f - b.f);
-      openSet.splice(2000); // Keep only best 2000 nodes
-    }
-  }
-  
-  console.log(`A* search completed. Iterations: ${iterations}. No solution found.`);
-  return null; // No solution found
-}
-
-// Convert game state format to A* format and handle result
-function convertGameStateForAStar(gameState) {
-  // Convert from current format [1,2,3...15,0] to A* format [1,2,3...15,0]
-  // The game state is already in the right format, just need to handle empty tile
-  return gameState.map(tile => tile === 0 ? 0 : tile);
-}
-
-// Manhattan Distance Heuristic
-function manhattanDistance(board) {
-  let distance = 0;
-  const size = 4;
-  const emptyTile = 0;
-  
-  for (let i = 0; i < 16; i++) {
-    if (board[i] !== emptyTile) {
-      const currentRow = Math.floor(i / size);
-      const currentCol = i % size;
-      const targetPos = board[i] - 1; // Convert to 0-based indexing
-      const targetRow = Math.floor(targetPos / size);
-      const targetCol = targetPos % size;
-      distance += Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
-    }
-  }
-  return distance;
-}
-
-// Linear Conflict Heuristic (enhances Manhattan distance)
-function linearConflict(board) {
-  let conflicts = 0;
-  const size = 4;
-  const emptyTile = 0;
-  
-  // Row conflicts
-  for (let row = 0; row < size; row++) {
-    const rowTiles = [];
-    for (let col = 0; col < size; col++) {
-      const pos = row * size + col;
-      const tile = board[pos];
-      if (tile !== emptyTile) {
-        const targetRow = Math.floor((tile - 1) / size);
-        if (targetRow === row) {
-          rowTiles.push({ tile, col });
-        }
-      }
-    }
-    
-    // Count conflicts in this row
-    for (let i = 0; i < rowTiles.length - 1; i++) {
-      for (let j = i + 1; j < rowTiles.length; j++) {
-        const tile1 = rowTiles[i];
-        const tile2 = rowTiles[j];
-        const targetCol1 = (tile1.tile - 1) % size;
-        const targetCol2 = (tile2.tile - 1) % size;
-        
-        if ((tile1.col < tile2.col && targetCol1 > targetCol2) ||
-            (tile1.col > tile2.col && targetCol1 < targetCol2)) {
-          conflicts++;
-        }
-      }
-    }
-  }
-  
-  // Column conflicts
-  for (let col = 0; col < size; col++) {
-    const colTiles = [];
-    for (let row = 0; row < size; row++) {
-      const pos = row * size + col;
-      const tile = board[pos];
-      if (tile !== emptyTile) {
-        const targetCol = (tile - 1) % size;
-        if (targetCol === col) {
-          colTiles.push({ tile, row });
-        }
-      }
-    }
-    
-    // Count conflicts in this column
-    for (let i = 0; i < colTiles.length - 1; i++) {
-      for (let j = i + 1; j < colTiles.length; j++) {
-        const tile1 = colTiles[i];
-        const tile2 = colTiles[j];
-        const targetRow1 = Math.floor((tile1.tile - 1) / size);
-        const targetRow2 = Math.floor((tile2.tile - 1) / size);
-        
-        if ((tile1.row < tile2.row && targetRow1 > targetRow2) ||
-            (tile1.row > tile2.row && targetRow1 < targetRow2)) {
-          conflicts++;
-        }
-      }
-    }
-  }
-  
-  return conflicts * 2;
-}
-
-// Generate all possible neighbor states
-function getNeighbors(board) {
-  const neighbors = [];
-  const emptyPos = board.indexOf(0);
-  const size = 4;
-  const emptyRow = Math.floor(emptyPos / size);
-  const emptyCol = emptyPos % size;
-  
-  const directions = [
-    {row: -1, col: 0, name: 'up'},
-    {row: 1, col: 0, name: 'down'},
-    {row: 0, col: -1, name: 'left'},
-    {row: 0, col: 1, name: 'right'}
-  ];
-  
-  for (const dir of directions) {
-    const newRow = emptyRow + dir.row;
-    const newCol = emptyCol + dir.col;
-    
-    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
-      const newPos = newRow * size + newCol;
-      const newBoard = [...board];
-      [newBoard[emptyPos], newBoard[newPos]] = [newBoard[newPos], newBoard[emptyPos]];
+      const improvement = currentDistance - newDistance;
       
-      neighbors.push({
-        board: newBoard,
-        move: {tile: board[newPos], from: newPos, to: emptyPos}
-      });
+      if (improvement > bestImprovement) {
+        bestImprovement = improvement;
+        bestMove = move;
+      }
+    }
+    
+    if (bestMove) {
+      moves.push(bestMove);
+      const movePos = workingState.indexOf(bestMove);
+      workingState[workingBlankPos] = bestMove;
+      workingState[movePos] = 0;
+      workingBlankPos = movePos;
+    } else {
+      // If no improving move, try any valid move
+      if (validMoves.length > 0) {
+        const randomMove = validMoves[0];
+        moves.push(randomMove);
+        const movePos = workingState.indexOf(randomMove);
+        workingState[workingBlankPos] = randomMove;
+        workingState[movePos] = 0;
+        workingBlankPos = movePos;
+      } else {
+        break;
+      }
     }
   }
   
-  return neighbors;
+  return moves;
 }
 
-// Helper function to compare boards
-function boardsEqual(board1, board2) {
-  return board1.every((tile, index) => tile === board2[index]);
-}
-
-// Get valid moves for existing system compatibility
+// Get all valid moves from current state
 function getValidMoves(state, blankPos) {
   const moves = [];
   const row = Math.floor(blankPos / 4);
   const col = blankPos % 4;
   
+  // Check all four directions
   const directions = [
-    { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }
+    { dr: -1, dc: 0 }, // up
+    { dr: 1, dc: 0 },  // down
+    { dr: 0, dc: -1 }, // left
+    { dr: 0, dc: 1 }   // right
   ];
   
   for (const dir of directions) {
@@ -817,9 +773,9 @@ function getValidMoves(state, blankPos) {
   return moves;
 }
 
-// Helper function to compare arrays (use boardsEqual for consistency)
+// Helper function to compare arrays
 function arraysEqual(a, b) {
-  return boardsEqual(a, b);
+  return a.length === b.length && a.every((val, i) => val === b[i]);
 }
 
 // Human-like systematic solver provides complete step-by-step solution
@@ -836,7 +792,7 @@ function animateSolutionSteps(steps) {
   }
   
   let stepIndex = 0;
-  const animationSpeed = 600; // Faster for optimal A* solutions
+  const animationSpeed = 800; // Balanced speed to show all steps clearly
   
   function animateNextStep() {
     if (stepIndex >= steps.length) {

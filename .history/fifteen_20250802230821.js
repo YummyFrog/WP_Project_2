@@ -484,7 +484,7 @@ function cheatSolve() {
         solveInstantly(); // Fallback to instant solve
       }
     }
-  }, 30000); // 30 second timeout for A* solutions
+  }, 60000); // 60 second timeout for complete solutions
   
   // Find solution steps and animate them
   solvePuzzleStepByStep(savedState, savedBlankPos);
@@ -836,7 +836,7 @@ function animateSolutionSteps(steps) {
   }
   
   let stepIndex = 0;
-  const animationSpeed = 600; // Faster for optimal A* solutions
+  const animationSpeed = 800; // Balanced speed to show all steps clearly
   
   function animateNextStep() {
     if (stepIndex >= steps.length) {
