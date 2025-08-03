@@ -1,0 +1,57 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  /* Background will be set dynamically by theme system */
+}
+
+#puzzlearea {
+  width: 400px;
+  height: 400px;
+  margin: 0 auto;
+  position: relative;
+  border: 2px solid black;
+}
+
+.puzzlepiece {
+  width: 96px;
+  height: 96px;
+  border: 2px solid black;
+  position: absolute;
+  font-size: 32pt;
+  color: white;
+  text-align: center;
+  line-height: 96px;
+  background-image: url("background1.jpg"); /* default - will be overridden by theme system */
+  background-size: 400px 400px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.movablepiece {
+  border-color: red !important;
+  color: #006600 !important;
+  text-decoration: underline;
+}
+
+.validators {
+  text-align: right;
+  margin-top: 20px;
+}
+
+#themebutton {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#themebutton:hover {
+  background-color: #45a049;
+}

@@ -25,23 +25,23 @@ const themeImages = {
     pageBg: 'spacebg.png'
   },
   'ocean': {
-    puzzleBg: 'ocean.jpg',
+    puzzleBg: 'background1.jpg',
     pageBg: 'oceanbg.png'
   },
   'desert': {
-    puzzleBg: 'desert.jpg',
+    puzzleBg: 'background1.jpg',
     pageBg: 'desertbg.png'
   },
   'cityscape': {
-    puzzleBg: 'cityscape.jpg',
+    puzzleBg: 'background1.jpg',
     pageBg: 'cityscapebg.png'
   },
   'marvel': {
-    puzzleBg: 'marvel.jpg',
+    puzzleBg: 'background1.jpg',
     pageBg: 'marvelbg.png'
   },
   'retro': {
-    puzzleBg: 'retrogame.png',
+    puzzleBg: 'background1.jpg',
     pageBg: 'retrogamebg.png'
   }
 };
@@ -385,7 +385,6 @@ function resetStats() {
   const winMessage = document.getElementById("win-message");
   if (winMessage) {
     winMessage.textContent = "";
-    winMessage.classList.remove("show");
   }
   console.log("Stats reset complete");
 }
@@ -411,7 +410,6 @@ function showWinMessage() {
   const winMessage = document.getElementById("win-message");
   if (winMessage) {
     winMessage.textContent = "🎉 Puzzle Solved! Great job!";
-    winMessage.classList.add("show");
   }
   saveGameStats(moveCount, timeElapsed);
 }

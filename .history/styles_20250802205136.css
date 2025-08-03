@@ -63,44 +63,14 @@ h1 {
 }
 
 .movablepiece {
-  border-color: #FFD700 !important;
-  color: #FFD700 !important;
+  border-color: red !important;
+  color: #006600 !important;
   text-decoration: underline;
-  transform: scale(1.05);
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-#win-message {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #FFD700;
-  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
-  margin: 20px 0;
-  padding: 15px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
-  border: 2px solid #FFD700;
-  display: none; /* Hidden by default */
-  animation: winMessageFadeIn 0.5s ease-in-out;
-}
-
-#win-message.show {
-  display: inline-block;
-}
-
-@keyframes winMessageFadeIn {
-  from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 .validators {
   text-align: right;
-  margin-top: 30px;
-  opacity: 0.8;
-}
-
-.validators img {
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+  margin-top: 20px;
 }
 
 #cheatbutton, #themebutton, #shufflebutton {
