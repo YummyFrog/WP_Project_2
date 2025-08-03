@@ -424,43 +424,62 @@ function checkIfSolved() {
 }
 
 function cheatSolve() {
-  console.log("=== CHEAT SOLVE STARTED ===");
-  
   if (checkIfSolved()) {
     alert("Puzzle is already solved!");
     return;
   }
-  
-  console.log("Current state before cheat:", [...gameState]);
-  
-  // Stop the timer immediately
-  stopTimer();
-  
-  // Solve instantly with animation
-  solveInstantly();
-}
 
-function solveInstantly() {
-  console.log("Solving puzzle instantly...");
-  
-  // Set all tiles to their correct positions
-  for (let i = 0; i < 15; i++) {
-    gameState[i] = i + 1;
-  }
-  gameState[15] = 0;
-  blankPosition = 15;
-  
-  console.log("New solved state:", [...gameState]);
-  
-  // Animate all tiles to correct positions
-  for (let tileNumber = 1; tileNumber <= 15; tileNumber++) {
+  stopTimer();
+  disableInteraction();
+
+  // Replace game state with solved configuration
+  let index = 0;
+  const interval = setInterval(() => {
+    if (index >= 15) {
+      clearInterval(interval);
+
+      gameState = Array.from({ length: 15 }, (_, i) => i + 1);
+      gameState[15] = 0;
+      blankPosition = 15;
+
+      enableInteraction();
+      showWinMessage();
+      return;
+    }
+
+    const correctPos = index;
+    const tileNumber = index + 1;
+
+    gameState[correctPos] = tileNumber;
+
     const tile = tiles[tileNumber];
     if (tile) {
-      tile.style.transition = "all 0.3s ease-in-out";
-      updateTilePosition(tile, tileNumber - 1);
+      tile.style.transition = "all 0.2s ease-in-out";
+      updateTilePosition(tile, correctPos);
       tile.classList.remove("movablepiece");
     }
+
+    index++;
+  }, 150);
+}
+
+
+function disableInteraction() {
+  for (let i = 1; i <= 15; i++) {
+    tiles[i].style.pointerEvents = "none";
   }
+  document.getElementById("shufflebutton").disabled = true;
+  document.getElementById("cheatbutton").disabled = true;
+}
+
+function enableInteraction() {
+  for (let i = 1; i <= 15; i++) {
+    tiles[i].style.pointerEvents = "auto";
+  }
+  document.getElementById("shufflebutton").disabled = false;
+  document.getElementById("cheatbutton").disabled = false;
+}
+
   
   // Remove transitions after animation and show win message
   setTimeout(() => {
@@ -472,7 +491,7 @@ function solveInstantly() {
     showWinMessage();
     console.log("Cheat solve completed");
   }, 300);
-}
+
 
 function saveGameStats(moves, timeElapsed) {
   fetch("save_game.php", {
